@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { AnnouncementNotifications } from "@/components/AnnouncementNotifications";
 import { Hero } from "@/components/Hero";
-import { ShoutboxTrigger } from "@/components/ShoutboxTrigger";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LandscapeBackground } from "@/components/LandscapeBackground";
 import { ParticleField } from "@/components/ParticleField";
@@ -52,7 +51,6 @@ export function LandingScene() {
       <div className="landing-overlay" />
       <Hero />
       <AnnouncementNotifications />
-      <ShoutboxTrigger reducedMotion={reducedMotion} />
       {SHOW_SITE_FOOTER && <SiteFooter />}
     </div>
   );
