@@ -10,6 +10,9 @@ export const TAGLINE = "A forest is growing. Something new takes root.";
 
 export const DISCORD_INVITE_URL = "https://discord.gg/sylvanova";
 
+/** Public Minecraft Java server hostname (SRV record supplies port). */
+export const MINECRAFT_SERVER_ADDRESS = "mc.sylvanova.gg";
+
 /** Set to true when ready to show Discord OAuth sign-in on the landing page. */
 export const SHOW_DISCORD_LOGIN = false;
 
