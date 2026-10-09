@@ -120,7 +120,7 @@ export function McLandingPage() {
               </span>
             </button>
             <span className="mc-copy-hint" id="mc-copy-hint">
-              Tap to copy — no port needed
+              Tap to copy. No port needed.
             </span>
             <p
               className="mc-copy-status"
