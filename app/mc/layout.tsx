@@ -30,7 +30,7 @@ export const metadata: Metadata = {
         url: "/mc-background.jpg",
         width: 1920,
         height: 1129,
-        alt: "SylvaNova Minecraft server — castle on a floating island",
+        alt: "SylvaNova Minecraft server. Castle on a floating island.",
       },
     ],
   },
