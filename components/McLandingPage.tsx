@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   DISCORD_INVITE_URL,
   MINECRAFT_SERVER_ADDRESS,
   SITE_NAME,
 } from "@/lib/constants";
+import { useMcServerStatus } from "@/hooks/useMcServerStatus";
 
 export function McLandingPage() {
   const [copied, setCopied] = useState(false);
+  const pageRef = useRef<HTMLDivElement>(null);
+  const { online, playersOnline, playersMax, loaded } = useMcServerStatus();
 
   const copyServerAddress = useCallback(async () => {
     try {
@@ -21,20 +24,81 @@ export function McLandingPage() {
     }
   }, []);
 
+  useEffect(() => {
+    const page = pageRef.current;
+    if (!page) {
+      return;
+    }
+
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (motionQuery.matches) {
+      return;
+    }
+
+    const handleMove = (event: PointerEvent) => {
+      const rect = page.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - 0.5;
+      const y = (event.clientY - rect.top) / rect.height - 0.5;
+      page.style.setProperty("--mc-parallax-x", `${x * 14}px`);
+      page.style.setProperty("--mc-parallax-y", `${y * 10}px`);
+    };
+
+    const handleLeave = () => {
+      page.style.setProperty("--mc-parallax-x", "0px");
+      page.style.setProperty("--mc-parallax-y", "0px");
+    };
+
+    page.addEventListener("pointermove", handleMove);
+    page.addEventListener("pointerleave", handleLeave);
+    return () => {
+      page.removeEventListener("pointermove", handleMove);
+      page.removeEventListener("pointerleave", handleLeave);
+    };
+  }, []);
+
+  const statusLabel = !loaded
+    ? "Checking server…"
+    : online
+      ? playersMax > 0
+        ? `${playersOnline} / ${playersMax} online`
+        : `${playersOnline} online`
+      : "Server offline";
+
   return (
-    <div className="mc-page">
+    <div className="mc-page" ref={pageRef}>
       <div className="mc-page__bg" aria-hidden />
       <div className="mc-page__overlay" aria-hidden />
+      <div className="mc-page__vignette" aria-hidden />
 
       <div className="mc-page__content">
-        <section className="mc-panel" aria-labelledby="mc-heading">
-          <h1 id="mc-heading" className="mc-title">
-            {SITE_NAME} Minecraft
-          </h1>
-          <p className="mc-subtitle">
-            Join our community server — adventure, build, and hang out with the
-            grove.
-          </p>
+        <section className="mc-card" aria-labelledby="mc-heading">
+          <div className="mc-card__pixel-frame" aria-hidden>
+            <span className="mc-pixel-corner mc-pixel-corner--tl" />
+            <span className="mc-pixel-corner mc-pixel-corner--tr" />
+            <span className="mc-pixel-corner mc-pixel-corner--bl" />
+            <span className="mc-pixel-corner mc-pixel-corner--br" />
+          </div>
+
+          <div
+            className={`mc-status ${online ? "mc-status--online" : loaded ? "mc-status--offline" : "mc-status--pending"}`}
+            role="status"
+            aria-live="polite"
+          >
+            <GrassBlockIcon />
+            <span className="mc-status__dot" aria-hidden />
+            <span className="mc-status__text">{statusLabel}</span>
+          </div>
+
+          <header className="mc-hero">
+            <p className="mc-hero__eyebrow">{SITE_NAME}</p>
+            <h1 id="mc-heading" className="mc-hero__title">
+              Minecraft
+            </h1>
+            <p className="mc-hero__subtitle">
+              Adventure, build, and hang out with the grove on our community
+              server.
+            </p>
+          </header>
 
           <div className="mc-server-block">
             <span className="mc-server-label" id="mc-server-label">
@@ -42,15 +106,21 @@ export function McLandingPage() {
             </span>
             <button
               type="button"
-              className="mc-copy-button"
+              className="mc-address-chip"
               onClick={copyServerAddress}
               aria-labelledby="mc-server-label"
               aria-describedby="mc-copy-hint mc-copy-status"
             >
-              {MINECRAFT_SERVER_ADDRESS}
+              <ServerIcon />
+              <span className="mc-address-chip__host">
+                {MINECRAFT_SERVER_ADDRESS}
+              </span>
+              <span className="mc-address-chip__icon" aria-hidden>
+                {copied ? <CheckIcon /> : <CopyIcon />}
+              </span>
             </button>
             <span className="mc-copy-hint" id="mc-copy-hint">
-              Click to copy — no port needed
+              Tap to copy — no port needed
             </span>
             <p
               className="mc-copy-status"
@@ -58,7 +128,7 @@ export function McLandingPage() {
               role="status"
               aria-live="polite"
             >
-              {copied ? "Copied!" : ""}
+              {copied ? "Copied to clipboard!" : ""}
             </p>
           </div>
         </section>
@@ -74,7 +144,8 @@ export function McLandingPage() {
             Join Discord
           </a>
           <Link href="/" className="mc-back-link">
-            ← Back to {SITE_NAME}
+            <ArrowIcon />
+            Back to {SITE_NAME}
           </Link>
         </div>
       </div>
@@ -82,12 +153,70 @@ export function McLandingPage() {
   );
 }
 
+function CopyIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+      <path d="M4 2h7v1H5v8H4V2zm2 2h7v10H6V4zm1 1v8h5V5H7z" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+      <path d="M6 11L3 8l1-1 2 2 5-5 1 1-6 6z" />
+    </svg>
+  );
+}
+
+function ServerIcon() {
+  return (
+    <svg
+      className="mc-address-chip__server-icon"
+      width="18"
+      height="18"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M2 3h12v3H2V3zm0 5h12v3H2V8zm2 1h2v1H4V9zm3 0h5v1H7V9z" />
+    </svg>
+  );
+}
+
+function GrassBlockIcon() {
+  return (
+    <svg
+      className="mc-status__icon"
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      aria-hidden
+    >
+      <rect x="1" y="1" width="14" height="14" fill="#3d8528" />
+      <rect x="1" y="1" width="14" height="5" fill="#5cb85c" />
+      <rect x="3" y="3" width="2" height="2" fill="#4a9e42" />
+      <rect x="10" y="2" width="3" height="2" fill="#6cc45c" />
+      <rect x="1" y="6" width="14" height="9" fill="#6b5344" />
+      <rect x="4" y="9" width="2" height="2" fill="#5a4638" />
+    </svg>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden>
+      <path d="M6 1L5 0 0 5l5 5 1-1-4-4 4-4z" />
+    </svg>
+  );
+}
+
 function DiscordIcon() {
   return (
     <svg
       className="mc-discord-icon"
-      width="18"
-      height="18"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden
